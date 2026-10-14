@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f766e">
+  <title>MicroJob BD</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div><div class="brand">MicroJob <span>BD</span></div><small>ছোট কাজ, স্বচ্ছ হিসাব</small></div>
+    <button id="logoutBtn" class="secondary hidden">লগআউট</button>
+  </header>
+  <main class="container">
+    <section id="setupNotice" class="notice hidden"></section>
+    <section id="authPanel" class="panel">
+      <h1>স্বাগতম</h1>
+      <p class="muted">ইমেইল দিয়ে অ্যাকাউন্ট খুলুন অথবা লগইন করুন।</p>
+      <div class="tabs">
+        <button id="showLogin" class="tab active">লগইন</button>
+        <button id="showSignup" class="tab">নতুন অ্যাকাউন্ট</button>
+      </div>
+      <form id="authForm">
+        <label>ইমেইল<input id="email" type="email" autocomplete="email" required></label>
+        <label>পাসওয়ার্ড<input id="password" type="password" minlength="8" autocomplete="current-password" required></label>
+        <label id="nameLabel" class="hidden">আপনার নাম<input id="displayName" maxlength="80" autocomplete="name"></label>
+        <button id="authSubmit" type="submit" class="primary">লগইন</button>
+      </form>
+      <p id="authMessage" class="message" aria-live="polite"></p>
+    </section>
+
+    <section id="appPanel" class="hidden">
+      <div class="welcome">
+        <div><p class="eyebrow">আপনার ড্যাশবোর্ড</p><h1 id="helloName">স্বাগতম</h1></div>
+        <div class="balance-card"><small>উত্তোলনযোগ্য ব্যালেন্স</small><strong id="balance">৳0.00</strong></div>
+      </div>
+      <nav class="tabs navtabs">
+        <button class="tab active" data-tab="tasks">কাজ খুঁজুন</button>
+        <button class="tab" data-tab="mywork">আমার কাজ</button>
+        <button class="tab" data-tab="wallet">ওয়ালেট</button>
+        <button id="adminTab" class="tab hidden" data-tab="admin">অ্যাডমিন</button>
+      </nav>
+
+      <section id="tab-tasks" class="tabpage">
+        <div class="section-head"><div><h2>উপলব্ধ কাজ</h2><p class="muted">প্রতিটি কাজের নির্দেশনা পড়ে তারপর জমা দিন।</p></div><button id="refreshTasks" class="secondary">রিফ্রেশ</button></div>
+        <div id="taskList" class="task-list"></div>
+      </section>
+
+      <section id="tab-mywork" class="tabpage hidden">
+        <h2>আমার জমা দেওয়া কাজ</h2><div id="submissionList" class="stack"></div>
+      </section>
+
+      <section id="tab-wallet" class="tabpage hidden">
+        <h2>ওয়ালেট ও উত্তোলন</h2>
+        <div class="panel inner">
+          <p class="muted">শুধু অনুমোদিত কাজের আয় উত্তোলনযোগ্য। পেমেন্ট ম্যানুয়ালি যাচাই করা হবে।</p>
+          <form id="withdrawForm">
+            <label>পরিমাণ (টাকা)<input id="withdrawAmount" type="number" min="50" step="1" required placeholder="যেমন 100"></label>
+            <label>পেমেন্ট পদ্ধতি<select id="withdrawMethod"><option value="bkash">বিকাশ</option><option value="nagad">নগদ</option></select></label>
+            <label>যে নম্বরে টাকা পাবেন<input id="withdrawAccount" inputmode="tel" minlength="11" maxlength="14" required placeholder="01XXXXXXXXX"></label>
+            <button class="primary" type="submit">উত্তোলনের অনুরোধ দিন</button>
+          </form>
+          <p id="withdrawMessage" class="message" aria-live="polite"></p>
+        </div>
+        <h3>লেনদেনের ইতিহাস</h3><div id="transactionList" class="stack"></div>
+        <h3>উত্তোলনের অনুরোধ</h3><div id="withdrawalList" class="stack"></div>
+      </section>
+
+      <section id="tab-admin" class="tabpage hidden">
+        <div class="notice warning">অ্যাডমিন সুবিধা শুধু ডাটাবেসে অনুমোদিত admin role থাকা অ্যাকাউন্টে কাজ করবে। ব্রাউজারের UI নিজে নিরাপত্তা নয়; অনুমতি সার্ভারে যাচাই হয়।</div>
+        <h2>নতুন কাজ তৈরি</h2>
+        <div class="panel inner">
+          <form id="taskForm">
+            <label>কাজের শিরোনাম<input id="taskTitle" maxlength="120" required></label>
+            <label>বিস্তারিত নির্দেশনা<textarea id="taskDescription" maxlength="5000" required rows="4"></textarea></label>
+            <label>ক্যাটাগরি<select id="taskCategory"><option value="data_entry">ডেটা এন্ট্রি</option><option value="survey">সার্ভে</option><option value="website_testing">ওয়েবসাইট টেস্টিং</option><option value="content_review">কনটেন্ট রিভিউ</option><option value="other">অন্যান্য বৈধ কাজ</option></select></label>
+            <label>পুরস্কার (টাকা)<input id="taskReward" type="number" min="1" step="0.01" required></label>
+            <button class="primary" type="submit">কাজ প্রকাশ করুন</button>
+          </form>
+          <p id="taskCreateMessage" class="message"></p>
+        </div>
+        <div class="section-head"><h2>জমা দেওয়া কাজ যাচাই</h2><button id="refreshAdmin" class="secondary">রিফ্রেশ</button></div>
+        <div id="adminSubmissions" class="stack"></div>
+        <h2>উত্তোলনের অনুরোধ যাচাই</h2><div id="adminWithdrawals" class="stack"></div>
+      </section>
+    </section>
+    <footer>MicroJob BD Starter · বাস্তব অর্থ ব্যবহারের আগে নিরাপত্তা ও পেমেন্ট পরীক্ষা করুন।</footer>
+  </main>
+
+  <dialog id="submitDialog">
+    <form id="submissionForm" method="dialog">
+      <h2 id="submitTaskTitle">কাজ জমা দিন</h2>
+      <p id="submitTaskDescription" class="muted"></p>
+      <input id="submitTaskId" type="hidden">
+      <label>কাজের প্রমাণের লিংক (ঐচ্ছিক)<input id="proofUrl" type="url" placeholder="https://..."></label>
+      <label>আপনার উত্তর / কাজের বিবরণ<textarea id="answerText" rows="4" maxlength="5000" required></textarea></label>
+      <div class="dialog-actions"><button type="button" id="cancelSubmission" class="secondary">বাতিল</button><button type="submit" class="primary">জমা দিন</button></div>
+      <p id="submissionMessage" class="message"></p>
+    </form>
+  </dialog>
+  <div id="toast" class="toast hidden" role="status"></div>
+</body>
+</html>
